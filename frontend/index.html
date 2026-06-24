@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weather Chat</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg-1: #eef3fb;
+        --bg-2: #f8fafc;
+        --panel: rgba(255, 255, 255, 0.88);
+        --text: #172033;
+        --muted: #667085;
+        --border: rgba(102, 112, 133, 0.18);
+        --shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+        --accent: #2563eb;
+        --accent-dark: #1d4ed8;
+        --user: linear-gradient(180deg, #2f6fed 0%, #245fe0 100%);
+        --user-text: #ffffff;
+        --bot: #ffffff;
+        --bot-soft: #f8fbff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(37, 99, 235, 0.14),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(14, 165, 233, 0.12),
+            transparent 24%
+          ),
+          linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      }
+
+      .app {
+        width: 100%;
+        max-width: 860px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .header {
+        padding: 22px 22px 18px;
+        border-bottom: 1px solid var(--border);
+        background:
+          linear-gradient(
+            135deg,
+            rgba(37, 99, 235, 0.11),
+            rgba(14, 165, 233, 0.06)
+          ),
+          rgba(255, 255, 255, 0.94);
+      }
+
+      .header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        color: #fff;
+        font-size: 20px;
+        background: linear-gradient(135deg, var(--accent), #0ea5e9);
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+      }
+
+      .brand-copy {
+        min-width: 0;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.1;
+      }
+
+      .header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .header-chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(37, 99, 235, 0.16);
+        background: rgba(255, 255, 255, 0.82);
+        color: #1e40af;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .chat {
+        height: min(68vh, 720px);
+        min-height: 460px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        overflow-y: auto;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.95),
+          rgba(248, 251, 255, 0.98)
+        );
+      }
+
+      .message {
+        max-width: 78%;
+        padding: 13px 15px;
+        border-radius: 18px;
+        line-height: 1.5;
+        word-break: break-word;
+        white-space: pre-wrap;
+        border: 1px solid var(--border);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+      }
+
+      .message.system {
+        align-self: center;
+        max-width: 100%;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px dashed rgba(102, 112, 133, 0.24);
+        box-shadow: none;
+        color: var(--muted);
+      }
+
+      .message.user {
+        align-self: flex-end;
+        color: var(--user-text);
+        background: var(--user);
+        border-color: rgba(255, 255, 255, 0.18);
+        border-bottom-right-radius: 6px;
+      }
+
+      .message.bot {
+        align-self: flex-start;
+        color: var(--text);
+        background: linear-gradient(180deg, var(--bot), var(--bot-soft));
+        border-color: rgba(148, 163, 184, 0.2);
+        border-bottom-left-radius: 6px;
+      }
+
+      .thinking {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .thinking-dots {
+        display: inline-flex;
+        gap: 6px;
+      }
+
+      .thinking-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: pulse 1s infinite ease-in-out;
+      }
+
+      .thinking-dots span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+
+      .thinking-dots span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes pulse {
+        0%,
+        80%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.35;
+        }
+        40% {
+          transform: translateY(-3px);
+          opacity: 1;
+        }
+      }
+
+      .composer {
+        padding: 16px;
+        border-top: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .composer form {
+        display: flex;
+        gap: 12px;
+      }
+
+      .composer input {
+        flex: 1;
+        min-width: 0;
+        padding: 14px 15px;
+        font-size: 16px;
+        border: 1px solid rgba(102, 112, 133, 0.22);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.98);
+        color: var(--text);
+      }
+
+      .composer input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+      }
+
+      .composer button {
+        padding: 0 18px;
+        border: 0;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--accent), #1d4ed8);
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
+      }
+
+      .composer button:hover {
+        background: linear-gradient(135deg, var(--accent-dark), #1e40af);
+      }
+
+      .composer button:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+
+      .status {
+        min-height: 18px;
+        padding: 0 16px 16px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 12px;
+        }
+
+        .app {
+          border-radius: 18px;
+        }
+
+        .header {
+          padding: 18px 16px 14px;
+        }
+
+        .header h1 {
+          font-size: 20px;
+        }
+
+        .header-chip {
+          width: 100%;
+          text-align: center;
+        }
+
+        .chat {
+          height: 64vh;
+          min-height: 360px;
+          padding: 16px;
+        }
+
+        .message {
+          max-width: 92%;
+        }
+
+        .composer {
+          padding: 12px;
+        }
+
+        .composer form {
+          flex-direction: column;
+        }
+
+        .composer button {
+          height: 48px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="header">
+        <div class="header-top">
+          <div class="brand">
+            <div class="brand-mark">☁</div>
+            <div class="brand-copy">
+              <h1>Weather Chat</h1>
+              <p>
+                Ask for current weather or a forecast. Replies come from your
+                local backend.
+              </p>
+            </div>
+          </div>
+          <div class="header-chip">Local backend: http://localhost:8000</div>
+        </div>
+      </section>
+
+      <section id="chat" class="chat" aria-live="polite">
+        <div class="message system">
+          Type a city name, like “weather in London” or “3 day forecast for
+          Mumbai”.
+        </div>
+      </section>
+
+      <section class="composer">
+        <form id="chatForm">
+          <input
+            id="messageInput"
+            type="text"
+            placeholder="Ask about the weather..."
+            autocomplete="off"
+            required
+          />
+          <button id="sendButton" type="submit">Send</button>
+        </form>
+      </section>
+
+      <div id="status" class="status"></div>
+    </main>
+
+    <script>
+      const chat = document.getElementById("chat");
+      const form = document.getElementById("chatForm");
+      const input = document.getElementById("messageInput");
+      const sendButton = document.getElementById("sendButton");
+      const status = document.getElementById("status");
+
+      function scrollChatToBottom() {
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function addMessage(text, role) {
+        const bubble = document.createElement("div");
+        bubble.className = `message ${role}`;
+        bubble.textContent = text;
+        chat.appendChild(bubble);
+        scrollChatToBottom();
+        return bubble;
+      }
+
+      function addThinkingMessage() {
+        const bubble = document.createElement("div");
+        bubble.className = "message bot";
+
+        const thinking = document.createElement("span");
+        thinking.className = "thinking";
+        thinking.textContent = "Thinking";
+
+        const dots = document.createElement("span");
+        dots.className = "thinking-dots";
+        dots.innerHTML = "<span></span><span></span><span></span>";
+
+        bubble.appendChild(thinking);
+        bubble.appendChild(dots);
+        chat.appendChild(bubble);
+        scrollChatToBottom();
+        return bubble;
+      }
+
+      function setBusy(isBusy) {
+        sendButton.disabled = isBusy;
+        input.disabled = isBusy;
+        sendButton.textContent = isBusy ? "Sending..." : "Send";
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const message = input.value.trim();
+        if (!message) return;
+
+        status.textContent = "";
+        addMessage(message, "user");
+        input.value = "";
+        setBusy(true);
+
+        const replyBubble = addThinkingMessage();
+
+        try {
+          const response = await fetch("http://localhost:8000/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              data.detail || data.error || `Request failed with status ${response.status}`,
+            );
+          }
+
+          replyBubble.textContent = data.response || "No reply returned.";
+        } catch (error) {
+          replyBubble.textContent = "Error: " + error.message;
+          status.textContent =
+            "Make sure your backend is running at http://localhost:8000.";
+        } finally {
+          setBusy(false);
+          input.focus();
+          scrollChatToBottom();
+        }
+      });
+
+      input.focus();
+    </script>
+  </body>
+</html>
