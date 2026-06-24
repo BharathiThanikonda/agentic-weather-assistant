@@ -115,11 +115,8 @@ In a second terminal:
 
 ```powershell
 cd mcp-server
-python server.py
+uvicorn server:app --reload
 ```
-
-It listens on `http://127.0.0.1:8080/mcp`. Start it **before** the backend so the
-agent can load the weather tools at startup.
 
 ## Opening the Frontend
 

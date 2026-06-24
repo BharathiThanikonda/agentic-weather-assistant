@@ -74,7 +74,7 @@ def get_current_weather(city: str):
         return f"An unexpected error occurred: {e}"
 
 @app.tool()
-def get_forecast(city: str, days: int = 3):
+def get_forecast(city: str, days: int | str = 3):
     """
     Use this tool to get a daily weather forecast for a specific city for a number of days.
     It provides a summary of the average temperature and general conditions for each day.
@@ -84,6 +84,12 @@ def get_forecast(city: str, days: int = 3):
     """
     if not OPENWEATHERMAP_API_KEY:
         return "Error: The OpenWeatherMap API key is not configured. Please set the OPENWEATHERMAP_API_KEY environment variable."
+
+
+    try:
+        days = int(days)
+    except (ValueError, TypeError):
+        return "Error: 'days' must be a whole number between 1 and 5."
 
     if not 1 <= days <= 5:
         return "Error: Number of days for the forecast must be between 1 and 5."
